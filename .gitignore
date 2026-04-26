@@ -12,7 +12,6 @@ __pycache__/
 *.ipynb
 
 # Data and outputs
-/data/
 
 *.tsv
 
@@ -21,12 +20,42 @@ __pycache__/
 *.h5
 *.ckpt
 *.pt
+*.npy
+*.npz
+*.arrow
+*.csv
 *.log
 *.tmp
 *.bak
 
+
+data/processed/
+models/saved_models/
+
+# Models - too large for git (use Git LFS or external storage when ready)
+models/
+
+# Large data files
+data/
+
+# CatBoost training info
+catboost_info/
+
+# Outputs
+outputs/
+
+# Frontend dependencies
+frontend/node_modules/
+frontend/dist/
+
+# Plan and progress docs
+STARTUP.md
+
 # VSCode
 .vscode/
+
+# PyCharm
+.idea/
 
 # OS
 .DS_Store
@@ -40,3 +69,4 @@ ENV/
 # Misc
 *.swp
 *.swo
+docs/

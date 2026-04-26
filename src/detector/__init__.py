@@ -1,1 +1,1 @@
-"""Detector package."""
+"""Detector package — reserved for future use."""

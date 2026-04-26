@@ -116,7 +116,8 @@ class CodeParser:
             }
         
         try:
-            tree = parser.parse(bytes(code, 'utf8'))
+            code_bytes = code.encode('utf-8')
+            tree = parser.parse(code_bytes)
             
             return {
                 'success': True,
@@ -124,7 +125,8 @@ class CodeParser:
                 'root_node': tree.root_node,
                 'language': language,
                 'filepath': filepath,
-                'code': code
+                'code': code,
+                'code_bytes': code_bytes,
             }
         except Exception as e:
             logger.error(f"Parse error: {e}")
@@ -148,7 +150,7 @@ class CodeParser:
             return []
         
         tree = parse_result['tree']
-        code = parse_result['code']
+        code_bytes = parse_result.get('code_bytes') or parse_result['code'].encode('utf-8')
         functions = []
         
         # Node types that represent functions in different languages
@@ -165,9 +167,9 @@ class CodeParser:
         
         def traverse(node):
             if node.type in function_types:
-                func_code = code[node.start_byte:node.end_byte]
+                func_code = code_bytes[node.start_byte:node.end_byte].decode('utf-8', errors='replace')
                 functions.append({
-                    'name': self._get_function_name(node, code),
+                    'name': self._get_function_name(node, code_bytes),
                     'code': func_code,
                     'start_line': node.start_point[0] + 1,  # 1-indexed
                     'end_line': node.end_point[0] + 1,
@@ -182,18 +184,18 @@ class CodeParser:
         traverse(tree.root_node)
         return functions
     
-    def _get_function_name(self, node, code: str) -> str:
+    def _get_function_name(self, node, code_bytes: bytes) -> str:
         """Extract function name from AST node"""
         # Look for identifier child nodes
         for child in node.children:
             if child.type == 'identifier':
-                return code[child.start_byte:child.end_byte]
+                return code_bytes[child.start_byte:child.end_byte].decode('utf-8', errors='replace')
         
-        # Fallback: look deeper
+        # Fallback: look deeper (e.g. C function_declarator → identifier)
         for child in node.children:
             for grandchild in child.children:
                 if grandchild.type == 'identifier':
-                    return code[grandchild.start_byte:grandchild.end_byte]
+                    return code_bytes[grandchild.start_byte:grandchild.end_byte].decode('utf-8', errors='replace')
         
         return "anonymous"
     

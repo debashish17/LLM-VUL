@@ -1,0 +1,87 @@
+rules:
+  - id: c-buffer-overflow-strcpy
+    languages: [c, cpp]
+    message: Use of strcpy without bounds checking can lead to buffer overflow (CWE-120)
+    severity: ERROR
+    metadata:
+      cwe: CWE-120
+      category: security
+    pattern: strcpy(...)
+
+  - id: c-buffer-overflow-strcat
+    languages: [c, cpp]
+    message: Use of strcat without bounds checking can lead to buffer overflow (CWE-120)
+    severity: ERROR
+    metadata:
+      cwe: CWE-120
+      category: security
+    pattern: strcat(...)
+
+  - id: c-buffer-overflow-sprintf
+    languages: [c, cpp]
+    message: Use of sprintf without bounds checking can lead to buffer overflow (CWE-120)
+    severity: ERROR
+    metadata:
+      cwe: CWE-120
+      category: security
+    pattern: sprintf(...)
+
+  - id: c-buffer-overflow-gets
+    languages: [c, cpp]
+    message: Use of gets() is inherently unsafe and banned (CWE-120, CWE-242)
+    severity: ERROR
+    metadata:
+      cwe: CWE-120
+      category: security
+    pattern: gets(...)
+
+  - id: c-command-injection-system
+    languages: [c, cpp]
+    message: Use of system() can lead to command injection (CWE-78)
+    severity: ERROR
+    metadata:
+      cwe: CWE-78
+      category: security
+    pattern: system(...)
+
+  - id: c-command-injection-popen
+    languages: [c, cpp]
+    message: Use of popen() can lead to command injection (CWE-78)
+    severity: WARNING
+    metadata:
+      cwe: CWE-78
+      category: security
+    pattern: popen(...)
+
+  - id: c-format-string
+    languages: [c, cpp]
+    message: Potential format string vulnerability (CWE-134)
+    severity: ERROR
+    metadata:
+      cwe: CWE-134
+      category: security
+    patterns:
+      - pattern-either:
+          - pattern: printf($VAR)
+          - pattern: fprintf($F, $VAR)
+      - pattern-not: printf("...")
+      - pattern-not: fprintf($F, "...")
+
+  - id: c-dangerous-atoi
+    languages: [c, cpp]
+    message: Use of atoi has no error handling - prefer strtol (CWE-676)
+    severity: WARNING
+    metadata:
+      cwe: CWE-676
+      category: security
+    pattern: atoi(...)
+
+  - id: c-integer-overflow-malloc
+    languages: [c, cpp]
+    message: Potential integer overflow in malloc size calculation (CWE-190)
+    severity: WARNING
+    metadata:
+      cwe: CWE-190
+      category: security
+    patterns:
+      - pattern-regex: 'malloc\s*\([^)]*\*[^)]*\)'

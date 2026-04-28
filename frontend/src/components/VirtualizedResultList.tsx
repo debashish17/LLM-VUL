@@ -21,33 +21,35 @@ export type SeverityFilter = 'all' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 interface Props { results: MergedResult[]; mode: ResultMode; mlModelUsed?: 'ensemble' | 'lora'; }
 
 // ─── Severity helpers ─────────────────────────────────────────────────────────
-const SEV_COLOR: Record<string, string> = {
-  CRITICAL: 'text-red-400 border-red-500',
-  HIGH:     'text-[#ff8c00] border-[#ff8c00]',
-  MEDIUM:   'text-[#ffb77d] border-[#ffb77d]',
-  LOW:      'text-[#a48c7a] border-[#a48c7a]',
+const SEV_BADGE: Record<string, string> = {
+  CRITICAL: 'bg-red-50 text-red-700 border border-red-200',
+  HIGH:     'bg-orange-50 text-orange-700 border border-orange-200',
+  MEDIUM:   'bg-amber-50 text-amber-700 border border-amber-200',
+  LOW:      'bg-slate-50 text-slate-600 border border-slate-200',
 };
 
-function SevTag({ sev }: { sev: string }) {
-  const cls = SEV_COLOR[sev] ?? 'text-[#a48c7a] border-[#a48c7a]';
+function SevBadge({ sev }: { sev: string }) {
+  const cls = SEV_BADGE[sev] ?? 'bg-slate-50 text-slate-600 border border-slate-200';
   return (
-    <span className={cn('text-[10px] font-black border px-1.5 py-0.5 uppercase tracking-wider', cls)}>
-      [ {sev} ]
+    <span className={cn('text-[10px] font-700 px-2 py-0.5 rounded-full uppercase tracking-wide', cls)}>
+      {sev}
     </span>
   );
 }
 
-// ─── Confidence bar (terminal style) ─────────────────────────────────────────
+// ─── Confidence bar ───────────────────────────────────────────────────────────
 function ConfBar({ value, label }: { value: number; label: string }) {
   const pct   = Math.round(value * 100);
-  const color = pct >= 75 ? 'bg-red-500' : pct >= 50 ? 'bg-[#ff8c00]' : pct >= 25 ? 'bg-[#ffb77d]' : 'bg-[#39ff14]';
-  const filled = Math.round(pct / 5); // 20 chars max
-  const bar   = '█'.repeat(filled) + '░'.repeat(20 - filled);
+  const barColor = pct >= 75 ? 'bg-red-500' : pct >= 50 ? 'bg-orange-400' : pct >= 25 ? 'bg-amber-400' : 'bg-green-500';
   return (
-    <div className="flex items-center gap-3 text-[11px] font-mono">
-      <span className="text-[#a48c7a] w-32 shrink-0 uppercase truncate">{label}</span>
-      <span className={cn('tracking-tighter', color)}>{bar}</span>
-      <span className="text-[#ffb77d] font-black w-8 text-right shrink-0">{pct}%</span>
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-[11px]">
+        <span className="text-[var(--ink-muted)] font-500 truncate">{label}</span>
+        <span className="text-[var(--ink)] font-700 ml-2 font-['DM_Mono',monospace]">{pct}%</span>
+      </div>
+      <div className="h-1.5 bg-[var(--bg-subtle)] rounded-full overflow-hidden">
+        <div className={cn('h-full rounded-full transition-all', barColor)} style={{ width: `${pct}%` }} />
+      </div>
     </div>
   );
 }
@@ -55,30 +57,28 @@ function ConfBar({ value, label }: { value: number; label: string }) {
 // ─── Static findings table ────────────────────────────────────────────────────
 function FindingsTable({ findings }: { findings: StaticFinding[] }) {
   if (!findings || findings.length === 0)
-    return <p className="text-[10px] text-[#a48c7a] italic">// NO_STATIC_FINDINGS</p>;
+    return <p className="text-xs text-[var(--ink-muted)] italic">No static findings</p>;
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-[10px] font-mono border-collapse">
+      <table className="w-full text-[11px] border-collapse">
         <thead>
-          <tr className="text-[#a48c7a] uppercase tracking-widest border-b border-[#a48c7a]/20">
-            <th className="text-left px-2 py-1">TOOL</th>
-            <th className="text-left px-2 py-1">CWE</th>
-            <th className="text-left px-2 py-1">SEV</th>
-            <th className="text-left px-2 py-1">MESSAGE</th>
+          <tr className="text-[var(--ink-muted)] font-600 uppercase tracking-wide border-b border-[var(--border)]">
+            <th className="text-left px-2 py-1.5">Tool</th>
+            <th className="text-left px-2 py-1.5">CWE</th>
+            <th className="text-left px-2 py-1.5">Severity</th>
+            <th className="text-left px-2 py-1.5">Message</th>
           </tr>
         </thead>
         <tbody>
           {findings.map((f, i) => (
-            <tr key={i} className="border-b border-[#a48c7a]/10 hover:bg-[#ff8c00]/5">
-              <td className="px-2 py-1 text-[#ff8c00]">{f.tool}</td>
-              <td className="px-2 py-1 text-[#ffb77d]">{f.cwe_id || '—'}</td>
-              <td className="px-2 py-1">
-                <span className={cn('text-[9px] border px-1', SEV_COLOR[f.severity] ?? 'text-[#a48c7a] border-[#a48c7a]')}>
-                  {f.severity}
-                </span>
+            <tr key={i} className="border-b border-[var(--border)] hover:bg-[var(--bg-subtle)] transition-colors">
+              <td className="px-2 py-1.5 font-600 text-[var(--accent)]">{f.tool}</td>
+              <td className="px-2 py-1.5 text-[var(--ink-mid)] font-['DM_Mono',monospace]">{f.cwe_id || '—'}</td>
+              <td className="px-2 py-1.5">
+                <SevBadge sev={f.severity} />
               </td>
-              <td className="px-2 py-1 text-[#a48c7a]">{f.message}</td>
+              <td className="px-2 py-1.5 text-[var(--ink-mid)]">{f.message}</td>
             </tr>
           ))}
         </tbody>
@@ -90,9 +90,9 @@ function FindingsTable({ findings }: { findings: StaticFinding[] }) {
 // ─── Model scores ─────────────────────────────────────────────────────────────
 function ModelScores({ models }: { models: Record<string, number> }) {
   if (!models || Object.keys(models).length === 0)
-    return <p className="text-[10px] text-[#a48c7a] italic">// NO_MODEL_SCORES</p>;
+    return <p className="text-xs text-[var(--ink-muted)] italic">No model scores</p>;
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2.5">
       {Object.entries(models).map(([name, score]) => (
         <ConfBar key={name} value={score} label={name} />
       ))}
@@ -100,18 +100,32 @@ function ModelScores({ models }: { models: Record<string, number> }) {
   );
 }
 
+// ─── Status badge ─────────────────────────────────────────────────────────────
+function StatusBadge({ vulnerable, conf }: { vulnerable: boolean; conf?: number }) {
+  const pct = conf !== undefined ? Math.round(conf * 100) : null;
+  if (vulnerable) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-700 px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+        Vulnerable{pct !== null ? ` · ${pct}%` : ''}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-700 px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">
+      <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+      Safe
+    </span>
+  );
+}
+
 // ─── Card shell ───────────────────────────────────────────────────────────────
 function CardShell({ vulnerable, children }: { vulnerable: boolean; children: React.ReactNode }) {
   return (
     <div className={cn(
-      'relative p-4 bg-[#1c1b1b] border-l-2',
-      vulnerable ? 'border-l-red-500' : 'border-l-[#39ff14]'
+      'bg-white border rounded-[var(--radius-lg)] p-4 transition-shadow hover:shadow-md',
+      vulnerable ? 'border-l-4 border-l-red-400 border-[var(--border)]' : 'border-l-4 border-l-green-400 border-[var(--border)]'
     )}>
-      {/* ASCII corners */}
-      <span className="absolute top-0 left-0 text-[#ff8c00]/30 text-xs leading-none select-none">┌</span>
-      <span className="absolute top-0 right-0 text-[#ff8c00]/30 text-xs leading-none select-none">┐</span>
-      <span className="absolute bottom-0 left-0 text-[#ff8c00]/30 text-xs leading-none select-none">└</span>
-      <span className="absolute bottom-0 right-0 text-[#ff8c00]/30 text-xs leading-none select-none">┘</span>
       {children}
     </div>
   );
@@ -124,54 +138,48 @@ function StaticCard({ result, index }: { result: MergedResult; index: number }) 
 
   return (
     <CardShell vulnerable={isVuln}>
-      {/* Header */}
       <div className="flex items-start justify-between mb-3 gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            {isVuln
-              ? <span className="text-[10px] font-black text-red-400 border border-red-500 px-1.5 py-0.5">[ VULN ]</span>
-              : <span className="text-[10px] font-black text-[#39ff14] border border-[#39ff14] px-1.5 py-0.5">[ SAFE ]</span>
-            }
-            {result.severity && result.severity !== 'N/A' && <SevTag sev={result.severity} />}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <StatusBadge vulnerable={isVuln} />
+            {result.severity && result.severity !== 'N/A' && <SevBadge sev={result.severity} />}
           </div>
-          <p className="text-sm font-black text-[#ffb77d] font-mono uppercase truncate">
+          <p className="text-sm font-700 text-[var(--ink)] truncate font-['DM_Mono',monospace]">
             #{index + 1} {result.function_name}
           </p>
         </div>
-        <span className="text-[9px] text-[#a48c7a] shrink-0 font-mono">STATIC_ANALYZER</span>
+        <span className="text-[10px] font-600 text-[var(--ink-muted)] bg-[var(--bg-subtle)] border border-[var(--border)] px-2 py-0.5 rounded-full shrink-0">
+          Static
+        </span>
       </div>
 
-      {/* File path */}
-      <p className="text-[10px] text-[#a48c7a] font-mono mb-3 truncate">
-        &gt; {result.file_path}:{result.line_number}
+      <p className="text-[11px] text-[var(--ink-muted)] font-['DM_Mono',monospace] mb-3 truncate">
+        {result.file_path}:{result.line_number}
       </p>
 
-      {/* CWE */}
       {result.cwe_types && result.cwe_types.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1">
           {result.cwe_types.map(cwe => (
-            <span key={cwe} className="text-[9px] border border-[#ff8c00]/40 text-[#ff8c00] px-1.5 py-0.5 font-mono">
+            <span key={cwe} className="text-[10px] font-600 bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent-dim)] px-2 py-0.5 rounded font-['DM_Mono',monospace]">
               {cwe}
             </span>
           ))}
         </div>
       )}
 
-      {/* Findings */}
       {hasFn && (
-        <div className="mb-3 border border-[#a48c7a]/20 bg-[#0e0e0e] p-2">
+        <div className="mb-3 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-3">
           <FindingsTable findings={result.static_findings} />
         </div>
       )}
 
-      {/* Code expand */}
-      <details className="mt-2 group">
-        <summary className="text-[10px] text-[#a48c7a] cursor-pointer hover:text-[#ff8c00] uppercase tracking-widest select-none list-none">
-          <span className="group-open:hidden">▶ VIEW_CODE</span>
-          <span className="hidden group-open:inline">▼ HIDE_CODE</span>
+      <details className="mt-1 group">
+        <summary className="text-xs text-[var(--accent)] cursor-pointer hover:underline select-none list-none font-600">
+          <span className="group-open:hidden">View code ↓</span>
+          <span className="hidden group-open:inline">Hide code ↑</span>
         </summary>
-        <div className="mt-2 bg-[#0a0a0a] border border-[#a48c7a]/20 p-3 overflow-x-auto">
-          <pre className="text-[11px] text-[#ffb77d] font-mono whitespace-pre-wrap leading-relaxed">
+        <div className="mt-2 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-3 overflow-x-auto">
+          <pre className="text-[11px] text-[var(--ink-mid)] font-['DM_Mono',monospace] whitespace-pre-wrap leading-relaxed">
             <code>{result.code}</code>
           </pre>
         </div>
@@ -182,66 +190,61 @@ function StaticCard({ result, index }: { result: MergedResult; index: number }) 
 
 // ─── ML card ─────────────────────────────────────────────────────────────────
 function MLCard({ result, index, mlModelUsed }: { result: MergedResult; index: number; mlModelUsed?: 'ensemble' | 'lora'; }) {
-  const mlVuln   = result.ml_vulnerable ?? result.vulnerable;
-  const mlConfPct = Math.round(result.ml_confidence * 100);
+  const mlVuln = result.ml_vulnerable ?? result.vulnerable;
 
   return (
     <CardShell vulnerable={mlVuln}>
-      {/* Header */}
       <div className="flex items-start justify-between mb-3 gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            {mlVuln
-              ? <span className="text-[10px] font-black text-red-400 border border-red-500 px-1.5 py-0.5">[ VULN · {mlConfPct}% ]</span>
-              : <span className="text-[10px] font-black text-[#39ff14] border border-[#39ff14] px-1.5 py-0.5">[ SAFE ]</span>
-            }
-            {mlVuln && result.severity && result.severity !== 'N/A' && <SevTag sev={result.severity} />}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <StatusBadge vulnerable={mlVuln} conf={result.ml_confidence} />
+            {mlVuln && result.severity && result.severity !== 'N/A' && <SevBadge sev={result.severity} />}
             {result.agreement && (
-              <span className="text-[9px] font-black text-[#ffb77d] border border-[#ffb77d]/50 px-1.5 py-0.5">✓ CONFIRMED</span>
+              <span className="text-[10px] font-600 bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+                ✓ Confirmed
+              </span>
             )}
           </div>
-          <p className="text-sm font-black text-[#ffb77d] font-mono uppercase truncate">
+          <p className="text-sm font-700 text-[var(--ink)] truncate font-['DM_Mono',monospace]">
             #{index + 1} {result.function_name}
           </p>
         </div>
-        <span className="text-[9px] text-[#a48c7a] shrink-0 font-mono">{mlModelUsed === 'lora' ? 'LORA_CODEBERT' : 'ML_ENSEMBLE'}</span>
+        <span className="text-[10px] font-600 text-[var(--ink-muted)] bg-[var(--bg-subtle)] border border-[var(--border)] px-2 py-0.5 rounded-full shrink-0">
+          {mlModelUsed === 'lora' ? 'LoRA' : 'Ensemble'}
+        </span>
       </div>
 
-      {/* File */}
-      <p className="text-[10px] text-[#a48c7a] font-mono mb-3 truncate">
-        &gt; {result.file_path}:{result.line_number}
+      <p className="text-[11px] text-[var(--ink-muted)] font-['DM_Mono',monospace] mb-3 truncate">
+        {result.file_path}:{result.line_number}
       </p>
 
-      {/* Confidence bar */}
-      <div className="mb-3 bg-[#0e0e0e] border border-[#a48c7a]/20 p-2">
-        <ConfBar value={result.ml_confidence} label="ML_CONFIDENCE" />
+      <div className="mb-3 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-3">
+        <ConfBar value={result.ml_confidence} label="ML Confidence" />
       </div>
 
-      {/* CWE */}
       {mlVuln && result.cwe_types && result.cwe_types.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1">
           {result.cwe_types.map(cwe => (
-            <span key={cwe} className="text-[9px] border border-[#ff8c00]/40 text-[#ff8c00] px-1.5 py-0.5 font-mono">
+            <span key={cwe} className="text-[10px] font-600 bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent-dim)] px-2 py-0.5 rounded font-['DM_Mono',monospace]">
               {cwe}
             </span>
           ))}
         </div>
       )}
 
-      {/* Expand: model scores + code */}
-      <details className="mt-2 group">
-        <summary className="text-[10px] text-[#a48c7a] cursor-pointer hover:text-[#ff8c00] uppercase tracking-widest select-none list-none">
-          <span className="group-open:hidden">▶ {mlModelUsed === 'lora' ? 'LORA_SCORES' : 'ENSEMBLE_SCORES'} + CODE</span>
-          <span className="hidden group-open:inline">▼ COLLAPSE</span>
+      <details className="mt-1 group">
+        <summary className="text-xs text-[var(--accent)] cursor-pointer hover:underline select-none list-none font-600">
+          <span className="group-open:hidden">{mlModelUsed === 'lora' ? 'LoRA scores' : 'Ensemble scores'} + code ↓</span>
+          <span className="hidden group-open:inline">Collapse ↑</span>
         </summary>
         <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="bg-[#0e0e0e] border border-[#a48c7a]/20 p-3">
-            <p className="text-[9px] text-[#a48c7a] uppercase tracking-widest mb-2">// MODEL_SCORES</p>
+          <div className="bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-3">
+            <p className="text-[10px] text-[var(--ink-muted)] font-600 uppercase tracking-wide mb-2">Model Scores</p>
             <ModelScores models={result.individual_models} />
           </div>
-          <div className="bg-[#0a0a0a] border border-[#a48c7a]/20 p-3 overflow-x-auto max-h-48 overflow-y-auto">
-            <p className="text-[9px] text-[#a48c7a] uppercase tracking-widest mb-2">// CODE_SNIPPET</p>
-            <pre className="text-[11px] text-[#ffb77d] font-mono whitespace-pre-wrap leading-relaxed">
+          <div className="bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-3 overflow-x-auto max-h-48 overflow-y-auto">
+            <p className="text-[10px] text-[var(--ink-muted)] font-600 uppercase tracking-wide mb-2">Code Snippet</p>
+            <pre className="text-[11px] text-[var(--ink-mid)] font-['DM_Mono',monospace] whitespace-pre-wrap leading-relaxed">
               <code>{result.code}</code>
             </pre>
           </div>
@@ -259,71 +262,72 @@ function AllCard({ result, index, mlModelUsed }: { result: MergedResult; index: 
   return (
     <CardShell vulnerable={isVuln}>
       <div className="flex items-start justify-between mb-3 gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            {isVuln
-              ? <span className="text-[10px] font-black text-red-400 border border-red-500 px-1.5 py-0.5">[ VULNERABLE ]</span>
-              : <span className="text-[10px] font-black text-[#39ff14] border border-[#39ff14] px-1.5 py-0.5">[ SAFE ]</span>
-            }
-            {isVuln && result.severity && result.severity !== 'N/A' && <SevTag sev={result.severity} />}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <StatusBadge vulnerable={isVuln} />
+            {isVuln && result.severity && result.severity !== 'N/A' && <SevBadge sev={result.severity} />}
           </div>
-          <p className="text-sm font-black text-[#ffb77d] font-mono uppercase truncate">
+          <p className="text-sm font-700 text-[var(--ink)] truncate font-['DM_Mono',monospace]">
             #{index + 1} {result.function_name}
           </p>
         </div>
-        <span className="text-[9px] text-[#a48c7a] shrink-0 font-mono">{result.detector_source?.toUpperCase()}</span>
+        <span className="text-[10px] font-600 text-[var(--ink-muted)] bg-[var(--bg-subtle)] border border-[var(--border)] px-2 py-0.5 rounded-full shrink-0">
+          {result.detector_source}
+        </span>
       </div>
 
-      <p className="text-[10px] text-[#a48c7a] font-mono mb-3 truncate">
-        &gt; {result.file_path}:{result.line_number}
+      <p className="text-[11px] text-[var(--ink-muted)] font-['DM_Mono',monospace] mb-3 truncate">
+        {result.file_path}:{result.line_number}
       </p>
 
-      <div className="grid grid-cols-2 gap-x-4 text-[10px] mb-3 font-mono">
-        <div>
-          <span className="text-[#a48c7a]">DETECTOR: </span>
-          <span className="text-[#ff8c00]">{result.detector_source}</span>
+      <div className="grid grid-cols-2 gap-3 text-[11px] mb-3">
+        <div className="bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-2.5">
+          <p className="text-[10px] text-[var(--ink-muted)] font-600 uppercase tracking-wide mb-1">Detector</p>
+          <p className="text-[var(--ink)] font-600">{result.detector_source}</p>
         </div>
-        <div>
-          <span className="text-[#a48c7a]">ML_PRED: </span>
-          <span className={(result.ml_vulnerable ?? result.vulnerable) ? 'text-red-400' : 'text-[#39ff14]'}>
-            {(result.ml_vulnerable ?? result.vulnerable) ? `VULN·${mlConfPct}%` : `SAFE·${mlConfPct}%`}
-          </span>
+        <div className="bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-2.5">
+          <p className="text-[10px] text-[var(--ink-muted)] font-600 uppercase tracking-wide mb-1">ML Prediction</p>
+          <p className={cn('font-600 font-["DM_Mono",monospace]', (result.ml_vulnerable ?? result.vulnerable) ? 'text-red-600' : 'text-green-600')}>
+            {(result.ml_vulnerable ?? result.vulnerable) ? `Vuln · ${mlConfPct}%` : `Safe · ${mlConfPct}%`}
+          </p>
         </div>
       </div>
 
-      <div className="bg-[#0e0e0e] border border-[#a48c7a]/20 p-2 mb-3">
-        <ConfBar value={result.ml_confidence} label="ML_CONFIDENCE" />
+      <div className="mb-3 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-3">
+        <ConfBar value={result.ml_confidence} label="ML Confidence" />
       </div>
 
       {result.cwe_types && result.cwe_types.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1">
           {result.cwe_types.map(cwe => (
-            <span key={cwe} className="text-[9px] border border-[#ff8c00]/40 text-[#ff8c00] px-1.5 py-0.5 font-mono">
+            <span key={cwe} className="text-[10px] font-600 bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent-dim)] px-2 py-0.5 rounded font-['DM_Mono',monospace]">
               {cwe}
             </span>
           ))}
         </div>
       )}
 
-      <details className="mt-2 group">
-        <summary className="text-[10px] text-[#a48c7a] cursor-pointer hover:text-[#ff8c00] uppercase tracking-widest select-none list-none">
-          <span className="group-open:hidden">▶ DETAILS</span>
-          <span className="hidden group-open:inline">▼ COLLAPSE</span>
+      <details className="mt-1 group">
+        <summary className="text-xs text-[var(--accent)] cursor-pointer hover:underline select-none list-none font-600">
+          <span className="group-open:hidden">Details ↓</span>
+          <span className="hidden group-open:inline">Collapse ↑</span>
         </summary>
         <div className="mt-2 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-[#0e0e0e] border border-[#a48c7a]/20 p-2">
-              <p className="text-[9px] text-[#a48c7a] uppercase tracking-widest mb-2">// STATIC_FINDINGS</p>
+            <div className="bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-3">
+              <p className="text-[10px] text-[var(--ink-muted)] font-600 uppercase tracking-wide mb-2">Static Findings</p>
               <FindingsTable findings={result.static_findings} />
             </div>
-            <div className="bg-[#0e0e0e] border border-[#a48c7a]/20 p-2">
-              <p className="text-[9px] text-[#a48c7a] uppercase tracking-widest mb-2">// {mlModelUsed === 'lora' ? 'LORA_SCORES' : 'ENSEMBLE_SCORES'}</p>
+            <div className="bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-3">
+              <p className="text-[10px] text-[var(--ink-muted)] font-600 uppercase tracking-wide mb-2">
+                {mlModelUsed === 'lora' ? 'LoRA Scores' : 'Ensemble Scores'}
+              </p>
               <ModelScores models={result.individual_models} />
             </div>
           </div>
-          <div className="bg-[#0a0a0a] border border-[#a48c7a]/20 p-3 overflow-x-auto max-h-48 overflow-y-auto">
-            <p className="text-[9px] text-[#a48c7a] uppercase tracking-widest mb-2">// CODE_SNIPPET</p>
-            <pre className="text-[11px] text-[#ffb77d] font-mono whitespace-pre-wrap leading-relaxed">
+          <div className="bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-3 overflow-x-auto max-h-48 overflow-y-auto">
+            <p className="text-[10px] text-[var(--ink-muted)] font-600 uppercase tracking-wide mb-2">Code Snippet</p>
+            <pre className="text-[11px] text-[var(--ink-mid)] font-['DM_Mono',monospace] whitespace-pre-wrap leading-relaxed">
               <code>{result.code}</code>
             </pre>
           </div>
@@ -346,9 +350,14 @@ export function VirtualizedResultList({ results, mode, mlModelUsed }: Props) {
 
   if (results.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 text-[#a48c7a] font-mono text-xs uppercase tracking-widest">
-        <p className="text-[#ff8c00]/50 text-2xl mb-3">{'>'}_</p>
-        <p>// NO_RESULTS_MATCH_FILTERS</p>
+      <div className="flex flex-col items-center justify-center h-48 text-[var(--ink-muted)]">
+        <div className="w-10 h-10 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center mb-3">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+        </div>
+        <p className="text-sm font-500">No results match filters</p>
       </div>
     );
   }
@@ -356,7 +365,7 @@ export function VirtualizedResultList({ results, mode, mlModelUsed }: Props) {
   return (
     <div
       ref={parentRef}
-      className="h-155 w-full overflow-auto border border-[#a48c7a]/20 bg-[#131313]"
+      className="h-[620px] w-full overflow-auto rounded-[var(--radius)]"
     >
       <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
         {virtualizer.getVirtualItems().map((virtualItem) => {
@@ -366,7 +375,7 @@ export function VirtualizedResultList({ results, mode, mlModelUsed }: Props) {
               key={virtualItem.key}
               ref={virtualizer.measureElement}
               data-index={virtualItem.index}
-              className="absolute top-0 left-0 w-full px-3 py-2"
+              className="absolute top-0 left-0 w-full px-1 py-1.5"
               style={{ transform: `translateY(${virtualItem.start}px)` }}
             >
               {mode === 'static' && <StaticCard result={result} index={virtualItem.index} />}

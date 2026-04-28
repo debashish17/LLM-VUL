@@ -28,22 +28,22 @@ function FilterBar({
   showSeverity = true, showDetector, onStatusChange, onSeverityChange, onDetectorChange,
   total, shown,
 }: FilterBarProps) {
-  const btnBase = 'px-3 py-1 text-xs font-bold uppercase tracking-wider border transition-none cursor-crosshair';
-  const active   = 'bg-[#ff8c00] text-[#131313] border-[#ff8c00]';
-  const inactive = 'bg-transparent text-[#a48c7a] border-[#a48c7a]/30 hover:border-[#ff8c00] hover:text-[#ff8c00]';
+  const chip = 'px-3 py-1 text-xs font-600 rounded-full border transition-colors cursor-pointer';
+  const active   = 'bg-[var(--accent)] text-white border-[var(--accent)]';
+  const inactive = 'bg-white text-[var(--ink-mid)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]';
 
   const statusOpts: StatusFilter[]     = ['all', 'vulnerable', 'safe'];
   const severityOpts: SeverityFilter[] = ['all', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
   const detectorOpts                   = ['all', 'Both (Static + ML)', 'ML Model', 'Static Analysis'];
 
   return (
-    <div className="flex flex-wrap items-center gap-4 mb-4 pb-4 border-b border-[#a48c7a]/20">
+    <div className="flex flex-wrap items-center gap-4 mb-4 pb-4 border-b border-[var(--border)]">
       <div className="flex items-center gap-2">
-        <span className="text-[10px] text-[#a48c7a] uppercase tracking-widest mr-1">--STATUS=</span>
+        <span className="text-[11px] text-[var(--ink-muted)] font-500 uppercase tracking-wide">Status</span>
         <div className="flex gap-1">
           {statusOpts.map(opt => (
-            <button key={opt} type="button" className={cn(btnBase, statusFilter === opt ? active : inactive)} onClick={() => onStatusChange(opt)}>
-              {opt === 'all' ? 'ALL' : opt.toUpperCase()}
+            <button key={opt} type="button" className={cn(chip, statusFilter === opt ? active : inactive)} onClick={() => onStatusChange(opt)}>
+              {opt === 'all' ? 'All' : opt.charAt(0).toUpperCase() + opt.slice(1)}
             </button>
           ))}
         </div>
@@ -51,11 +51,11 @@ function FilterBar({
 
       {showSeverity && (
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-[#a48c7a] uppercase tracking-widest mr-1">--SEVERITY=</span>
+          <span className="text-[11px] text-[var(--ink-muted)] font-500 uppercase tracking-wide">Severity</span>
           <div className="flex gap-1">
             {severityOpts.map(opt => (
-              <button key={opt} type="button" className={cn(btnBase, severityFilter === opt ? active : inactive)} onClick={() => onSeverityChange(opt)}>
-                {opt === 'all' ? 'ALL' : opt}
+              <button key={opt} type="button" className={cn(chip, severityFilter === opt ? active : inactive)} onClick={() => onSeverityChange(opt)}>
+                {opt === 'all' ? 'All' : opt}
               </button>
             ))}
           </div>
@@ -64,19 +64,19 @@ function FilterBar({
 
       {showDetector && onDetectorChange && (
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-[#a48c7a] uppercase tracking-widest mr-1">--DETECTOR=</span>
+          <span className="text-[11px] text-[var(--ink-muted)] font-500 uppercase tracking-wide">Detector</span>
           <div className="flex gap-1">
             {detectorOpts.map(opt => (
-              <button key={opt} type="button" className={cn(btnBase, detectorFilter === opt ? active : inactive)} onClick={() => onDetectorChange(opt)}>
-                {opt === 'all' ? 'ALL' : opt.replace('Both (Static + ML)', 'BOTH').replace('ML Model', 'ML').replace('Static Analysis', 'STATIC')}
+              <button key={opt} type="button" className={cn(chip, detectorFilter === opt ? active : inactive)} onClick={() => onDetectorChange(opt)}>
+                {opt === 'all' ? 'All' : opt.replace('Both (Static + ML)', 'Both').replace('ML Model', 'ML').replace('Static Analysis', 'Static')}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      <span className="ml-auto text-[10px] text-[#a48c7a] uppercase tracking-wider">
-        SHOWING <span className="text-[#ff8c00] font-bold">{shown}</span>/{total}
+      <span className="ml-auto text-xs text-[var(--ink-muted)]">
+        Showing <span className="text-[var(--ink)] font-600">{shown}</span> of {total}
       </span>
     </div>
   );
@@ -92,11 +92,6 @@ function applySeverityFilter(results: MergedResult[], filter: SeverityFilter): M
   if (filter === 'all') return results;
   return results.filter(r => r.severity === filter);
 }
-function applyDetectorFilter(results: MergedResult[], filter: string): MergedResult[] {
-  if (filter === 'all') return results;
-  return results.filter(r => r.detector_source === filter);
-}
-
 // ─── Tab state ────────────────────────────────────────────────────────────────
 interface TabFilters { status: StatusFilter; severity: SeverityFilter; detector: string; }
 const DEFAULT_FILTERS: TabFilters = { status: 'all', severity: 'all', detector: 'all' };
@@ -105,16 +100,34 @@ type NavTab = 'system' | 'logs';
 type ResultTab = ResultMode;
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, accent }: { label: string; value: string | number; sub?: string; accent?: string }) {
+function StatCard({ label, value, sub, variant = 'default' }: {
+  label: string;
+  value: string | number;
+  sub?: string;
+  variant?: 'default' | 'danger' | 'success' | 'accent';
+}) {
+  const valueColor = {
+    default: 'text-[var(--ink)]',
+    danger:  'text-[var(--danger)]',
+    success: 'text-[var(--success)]',
+    accent:  'text-[var(--accent)]',
+  }[variant];
+
+  const dotColor = {
+    default: 'bg-[var(--ink-ghost)]',
+    danger:  'bg-[var(--danger)]',
+    success: 'bg-[var(--success)]',
+    accent:  'bg-[var(--accent)]',
+  }[variant];
+
   return (
-    <div className="bg-[#1c1b1b] border border-[#a48c7a]/25 p-4 relative">
-      <span className="absolute top-0 left-0 text-[#ff8c00]/40 text-xs leading-none select-none">┌</span>
-      <span className="absolute top-0 right-0 text-[#ff8c00]/40 text-xs leading-none select-none">┐</span>
-      <span className="absolute bottom-0 left-0 text-[#ff8c00]/40 text-xs leading-none select-none">└</span>
-      <span className="absolute bottom-0 right-0 text-[#ff8c00]/40 text-xs leading-none select-none">┘</span>
-      <p className="text-[10px] uppercase tracking-widest text-[#a48c7a] mb-2">{label}</p>
-      <p className={cn('text-3xl font-black', accent ?? 'text-[#ffb77d]')}>{value}</p>
-      {sub && <p className="text-[10px] text-[#a48c7a] mt-1 uppercase">{sub}</p>}
+    <div className="bg-white border border-[var(--border)] rounded-[var(--radius-lg)] p-5 fade-up">
+      <div className="flex items-center gap-2 mb-3">
+        <span className={cn('w-2 h-2 rounded-full', dotColor)} />
+        <span className="text-[11px] text-[var(--ink-muted)] font-600 uppercase tracking-widest">{label}</span>
+      </div>
+      <p className={cn('text-3xl font-800 leading-none mb-1', valueColor)}>{value}</p>
+      {sub && <p className="text-[11px] text-[var(--ink-muted)] mt-1">{sub}</p>}
     </div>
   );
 }
@@ -127,36 +140,35 @@ function LogPanel({ logs }: { logs: LogEntry[] }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [logs.length]);
 
-  const levelColor = (level: string) => {
-    if (level === 'ERR')  return 'text-red-400';
-    if (level === 'WARN') return 'text-[#ffb77d]';
-    if (level === 'OK')   return 'text-[#39ff14]';
-    if (level === 'DBUG') return 'text-gray-400';
-    return 'text-[#ff8c00]';
+  const levelStyle = (level: string): string => {
+    if (level === 'ERR')  return 'bg-[var(--danger-light)] text-[var(--danger)] border border-[var(--danger-dim)]';
+    if (level === 'WARN') return 'bg-[var(--warn-light)] text-[var(--warn)] border border-amber-200';
+    if (level === 'OK')   return 'bg-[var(--success-light)] text-[var(--success)] border border-[var(--success-dim)]';
+    if (level === 'DBUG') return 'bg-[var(--bg-subtle)] text-[var(--ink-muted)] border border-[var(--border)]';
+    return 'bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent-dim)]';
   };
 
   return (
-    <div className="bg-[#0a0a0a] border border-[#a48c7a]/20 h-130 overflow-y-auto p-4 font-mono text-xs relative">
-      <span className="absolute top-0 left-0 text-[#ff8c00]/30 text-xs leading-none select-none">┌</span>
-      <span className="absolute top-0 right-0 text-[#ff8c00]/30 text-xs leading-none select-none">┐</span>
-      <span className="absolute bottom-0 left-0 text-[#ff8c00]/30 text-xs leading-none select-none">└</span>
-      <span className="absolute bottom-0 right-0 text-[#ff8c00]/30 text-xs leading-none select-none">┘</span>
-
+    <div className="bg-white border border-[var(--border)] rounded-[var(--radius-lg)] h-[520px] overflow-y-auto">
       {logs.length === 0 ? (
-        <div className="flex items-center gap-2 text-[#a48c7a]/50 h-full justify-center flex-col uppercase tracking-widest">
-          <p className="text-2xl text-[#ff8c00]/20">{'>'}_</p>
-          <p>// NO_PIPELINE_LOGS_YET</p>
-          <p className="text-[9px]">run a scan to see output</p>
+        <div className="flex items-center justify-center h-full flex-col gap-3 text-[var(--ink-muted)]">
+          <div className="w-12 h-12 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <p className="text-sm font-500">No pipeline logs yet</p>
+          <p className="text-xs text-[var(--ink-ghost)]">Run a scan to see output here</p>
         </div>
       ) : (
-        <div className="space-y-0.5">
-          {logs.filter(entry => entry.level !== 'DBUG').map((entry, i) => (
-            <div key={i} className="flex items-start gap-3 leading-relaxed hover:bg-[#ff8c00]/5 px-1">
-              <span className="text-[#a48c7a]/50 shrink-0 w-20">{entry.ts}</span>
-              <span className={cn('font-black shrink-0 w-10', levelColor(entry.level))}>
-                [{entry.level}]
+        <div className="p-4 space-y-1 font-['DM_Mono',monospace]">
+          {logs.filter(e => e.level !== 'DBUG').map((entry, i) => (
+            <div key={i} className="flex items-start gap-3 text-[12px] py-1 px-2 rounded hover:bg-[var(--bg-subtle)] transition-colors">
+              <span className="text-[var(--ink-ghost)] shrink-0 w-20 pt-px">{entry.ts}</span>
+              <span className={cn('text-[10px] font-600 px-1.5 py-0.5 rounded shrink-0 leading-none mt-px', levelStyle(entry.level))}>
+                {entry.level}
               </span>
-              <span className="text-[#ffb77d]/80 break-all">{entry.msg}</span>
+              <span className="text-[var(--ink-mid)] break-all leading-relaxed">{entry.msg}</span>
             </div>
           ))}
           <div ref={bottomRef} />
@@ -183,7 +195,6 @@ export function Dashboard() {
   const isCompleted = statusData?.status === 'completed';
   const { data: resultsData } = useJobResults(jobId, isCompleted);
 
-  // ── Poll backend logs while job is running ────────────────────────────────
   const logOffsetRef = useRef(0);
   const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -194,7 +205,6 @@ export function Dashboard() {
   useEffect(() => {
     if (!jobId) return;
     logOffsetRef.current = 0;
-
     const poll = async () => {
       try {
         const res = await api.getJobLogs(jobId, logOffsetRef.current);
@@ -204,16 +214,13 @@ export function Dashboard() {
         }
       } catch { /* job may not exist yet */ }
     };
-
     poll();
     pollRef.current = setInterval(poll, 1500);
     return stopPolling;
   }, [jobId, stopPolling]);
 
-  // Stop polling once the job finishes
   useEffect(() => {
     if (statusData?.status === 'completed' || statusData?.status === 'failed') {
-      // One final fetch to catch any trailing log lines
       if (jobId) api.getJobLogs(jobId, logOffsetRef.current).then(res => {
         if (res.logs.length > 0) setLogs(prev => [...prev, ...res.logs]);
       }).catch(() => {});
@@ -221,7 +228,6 @@ export function Dashboard() {
     }
   }, [statusData?.status, jobId, stopPolling]);
 
-  // Add a log entry when scan starts
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!repoUrl) return;
@@ -229,7 +235,7 @@ export function Dashboard() {
     const ts  = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
     setLogs(prev => [...prev,
       { ts, level: 'INIT', msg: `Scan started: ${repoUrl}` },
-      { ts, level: 'INIT', msg: `Options: --max-files=${maxFiles} --model=${mlModel}` },
+      { ts, level: 'INIT', msg: `Options: max-files=${maxFiles} model=${mlModel}` },
     ]);
     startAnalysis.mutate(
       { repo_url: repoUrl, max_files: maxFiles, confidence_threshold: 0.308, ml_model: mlModel },
@@ -246,7 +252,6 @@ export function Dashboard() {
   const loraSummary    = resultsData?.lora_summary;
   const mlModelUsed    = resultsData?.ml_model_used ?? mlModel;
 
-  // Merge static + ml results for rendering (keyed by index — same order guaranteed)
   const mergedResults: MergedResult[] = (staticResults.length > 0)
     ? staticResults.map((sr, i) => {
         const mr = mlResults[i];
@@ -274,214 +279,241 @@ export function Dashboard() {
   const staticFiltered = mergedResults.filter(r => r.static_vulnerable);
   const mlFiltered     = applySeverityFilter(applyStatusFilter(mergedResults, mlFilters.status, true), mlFilters.severity);
 
-  const mlTabLabel = mlModelUsed === 'lora' ? 'LORA_DETECT' : 'ML_DETECT';
+  const mlTabLabel  = mlModelUsed === 'lora' ? 'LoRA Detection' : 'ML Detection';
   const mlTabHeader = mlModelUsed === 'lora'
-    ? '// LORA CODEBERT — QLORA ADAPTER · THRESHOLD 0.55'
-    : '// RUN12 ENSEMBLE: XGBOOST · LIGHTGBM · CATBOOST — THRESHOLD 0.308';
+    ? 'LoRA CodeBERT — QLoRA Adapter · Threshold 0.55'
+    : 'Run12 Ensemble: XGBoost · LightGBM · CatBoost — Threshold 0.308';
 
   const resultTabs: { id: ResultTab; label: string; count: number }[] = [
-    { id: 'static', label: 'STATIC',    count: staticFiltered.length },
-    { id: 'ml',     label: mlTabLabel,  count: mergedResults.length },
+    { id: 'static', label: 'Static Analysis', count: staticFiltered.length },
+    { id: 'ml',     label: mlTabLabel,         count: mergedResults.length },
   ];
 
-  const cliCmd = repoUrl
-    ? `analyze --repo ${repoUrl} --max-files ${maxFiles} --model ${mlModel}`
-    : `analyze --repo <url> --max-files ${maxFiles} --model ${mlModel}`;
+  const progress = statusData?.progress ?? 0;
 
   return (
-    <div className="min-h-screen bg-[#131313] font-mono">
+    <div className="min-h-screen bg-[var(--bg)]">
 
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-[#131313] border-b border-[#a48c7a]/25 px-6 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <span className="text-[#ff8c00] font-black text-lg tracking-tighter uppercase">
-            VULNDETECT_SYS<span className="text-[#a48c7a]">_v1.0</span>
-          </span>
-          <nav className="hidden md:flex gap-0 text-xs uppercase tracking-widest">
+      {/* ── Header ─────────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 bg-white border-b border-[var(--border)] px-6 h-14 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-[6px] bg-[var(--accent)] flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <span className="text-[15px] font-700 text-[var(--ink)] tracking-tight">VulnDetect</span>
+            <span className="text-[10px] font-600 text-[var(--ink-muted)] bg-[var(--bg-subtle)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">v1.0</span>
+          </div>
+
+          <nav className="hidden md:flex gap-1">
             {(['system', 'logs'] as NavTab[]).map(tab => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => setNavTab(tab)}
                 className={cn(
-                  'px-5 py-1.5 transition-none border-b-2',
+                  'px-3.5 py-1.5 rounded-[var(--radius)] text-sm font-500 transition-colors relative',
                   navTab === tab
-                    ? 'text-[#ff8c00] border-[#ff8c00]'
-                    : 'text-[#a48c7a] border-transparent hover:text-[#ff8c00]'
+                    ? 'bg-[var(--accent-light)] text-[var(--accent)] font-600'
+                    : 'text-[var(--ink-mid)] hover:text-[var(--ink)] hover:bg-[var(--bg-subtle)]'
                 )}
               >
-                {tab.toUpperCase()}
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 {tab === 'logs' && logs.length > 0 && (
-                  <span className="ml-1.5 text-[9px] bg-[#ff8c00] text-[#131313] px-1 font-black">{logs.length}</span>
+                  <span className="ml-1.5 text-[10px] bg-[var(--accent)] text-white px-1.5 py-0.5 rounded-full font-600 leading-none">
+                    {logs.length}
+                  </span>
                 )}
               </button>
             ))}
           </nav>
         </div>
-        <div className="flex items-center gap-4 text-[10px] text-[#a48c7a] uppercase tracking-widest">
-          <span>[ STATUS: <span className="text-[#ff8c00]">ONLINE</span> ]</span>
-          <span className="hidden lg:block">[ MODEL: <span className="text-[#ff8c00]">{mlModelUsed === 'lora' ? 'LORA_CODEBERT' : 'RUN12_ENSEMBLE'}</span> ]</span>
+
+        <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] pulse-dot" />
+            <span className="text-[var(--ink-muted)] font-500">Online</span>
+          </div>
+          <div className="w-px h-4 bg-[var(--border)]" />
+          <span className="text-[var(--ink-muted)] font-500 hidden lg:block">
+            {mlModelUsed === 'lora' ? 'LoRA CodeBERT' : 'Run12 Ensemble'}
+          </span>
         </div>
       </header>
 
       {/* ── Main content ─────────────────────────────────────────── */}
-      <main className="max-w-5xl mx-auto px-3 py-6 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
 
         {/* ── SYSTEM tab ─────────────────────────────────────────── */}
         {navTab === 'system' && (
           <>
-            {/* ASCII banner */}
-            <section>
-              <pre className="text-[7px] md:text-[9px] leading-none text-[#ff8c00] select-none overflow-x-auto">
-{`██╗   ██╗██╗   ██╗██╗     ███╗   ██╗██████╗ ███████╗████████╗███████╗ ██████╗████████╗
-██║   ██║██║   ██║██║     ████╗  ██║██╔══██╗██╔════╝╚══██╔══╝██╔════╝██╔════╝╚══██╔══╝
-██║   ██║██║   ██║██║     ██╔██╗ ██║██║  ██║█████╗     ██║   █████╗  ██║        ██║
-╚██╗ ██╔╝██║   ██║██║     ██║╚██╗██║██║  ██║██╔══╝     ██║   ██╔══╝  ██║        ██║
- ╚████╔╝ ╚██████╔╝███████╗██║ ╚████║██████╔╝███████╗   ██║   ███████╗╚██████╗   ██║
-  ╚═══╝   ╚═════╝ ╚══════╝╚═╝  ╚═══╝╚═════╝ ╚══════╝   ╚═╝   ╚══════╝ ╚═════╝   ╚═╝  `}
-              </pre>
-              <div className="mt-3 flex flex-wrap gap-4 text-[10px] uppercase tracking-widest text-[#a48c7a]">
-                <span>[ STATUS: <span className="text-[#ff8c00]">OPERATIONAL</span> ]</span>
-                <span>[ DETECTORS: <span className="text-[#ff8c00]">CPPCHECK · FLAWFINDER · SEMGREP · {mlModel === 'lora' ? 'LORA_CODEBERT' : 'RUN12_ENSEMBLE'}</span> ]</span>
-                <span>[ THREAT_LEVEL: <span className="text-red-400">CRITICAL</span> ]</span>
+            {/* Hero section */}
+            <section className="fade-up">
+              <h1 className="text-2xl font-800 text-[var(--ink)] tracking-tight mb-1">
+                Vulnerability Detection
+              </h1>
+              <p className="text-[var(--ink-muted)] text-sm">
+                Static analysis + ML models scanning your repository for security vulnerabilities.
+              </p>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {['CppCheck', 'Flawfinder', 'Semgrep', mlModel === 'lora' ? 'LoRA CodeBERT' : 'Run12 Ensemble'].map(tool => (
+                  <span key={tool} className="text-[11px] font-600 text-[var(--ink-mid)] bg-white border border-[var(--border)] px-2.5 py-1 rounded-full">
+                    {tool}
+                  </span>
+                ))}
               </div>
             </section>
 
-            {/* Command input */}
-            <section className="bg-[#0e0e0e] border border-[#ff8c00]/30 p-4 relative">
-              <span className="absolute top-0 left-0 text-[#ff8c00]/30 text-xs select-none">┌</span>
-              <span className="absolute top-0 right-0 text-[#ff8c00]/30 text-xs select-none">┐</span>
-              <span className="absolute bottom-0 left-0 text-[#ff8c00]/30 text-xs select-none">└</span>
-              <span className="absolute bottom-0 right-0 text-[#ff8c00]/30 text-xs select-none">┘</span>
+            {/* Scan form */}
+            <section className="bg-white border border-[var(--border)] rounded-[var(--radius-lg)] p-6 shadow-sm fade-up fade-up-1">
+              <h2 className="text-sm font-700 text-[var(--ink)] mb-4">Scan Repository</h2>
 
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="text-[#a48c7a] shrink-0 select-none">user@vulndetect:~$</span>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* URL input */}
+                <div>
+                  <label className="block text-xs font-600 text-[var(--ink-mid)] uppercase tracking-wide mb-1.5">
+                    Repository URL
+                  </label>
                   <input
                     type="url"
                     value={repoUrl}
                     onChange={e => setRepoUrl(e.target.value)}
                     placeholder="https://github.com/owner/repo"
-                    className="flex-1 bg-transparent border-none outline-none text-[#ffb77d] placeholder:text-[#a48c7a]/40 font-mono text-sm caret-[#ff8c00]"
+                    className="w-full h-10 px-3.5 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] text-sm text-[var(--ink)] placeholder:text-[var(--ink-ghost)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-shadow font-['DM_Mono',monospace]"
                     required
                     disabled={isAnalyzing}
                   />
-                  {!repoUrl && <span className="term-cursor text-transparent select-none"> </span>}
                 </div>
 
-                <div className="flex items-center gap-4 text-[11px] text-[#a48c7a] pl-45 flex-wrap">
-                  <span className="text-[#ff8c00]/60">--max-files=</span>
-                  <input
-                    type="number"
-                    min="10"
-                    max="1000"
-                    value={maxFiles}
-                    onChange={e => setMaxFiles(parseInt(e.target.value))}
-                    className="bg-transparent border-b border-[#ff8c00]/40 outline-none text-[#ffb77d] font-mono text-xs w-16 text-center caret-[#ff8c00]"
-                    disabled={isAnalyzing}
-                    title="Max files"
-                    placeholder="50"
-                  />
-                  <span className="text-[#a48c7a]/40">--threshold=auto</span>
-                  <button
-                    type="submit"
-                    disabled={isAnalyzing || !repoUrl}
-                    className="ml-auto bg-[#ff8c00] text-[#131313] font-black text-xs uppercase px-6 py-1.5 tracking-widest hover:bg-[#ffb77d] disabled:opacity-30 disabled:cursor-not-allowed transition-none"
-                  >
-                    {isAnalyzing ? 'SCANNING...' : 'EXECUTE_SCAN ▶'}
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-3 text-[11px] text-[#a48c7a] pl-45 flex-wrap">
-                  <span className="text-[#ff8c00]/60">--model=</span>
-                  <div className="flex gap-1">
-                    {(['ensemble', 'lora'] as const).map(m => (
-                      <button
-                        key={m}
-                        type="button"
-                        disabled={isAnalyzing}
-                        onClick={() => setMlModel(m)}
-                        className={cn(
-                          'px-3 py-0.5 text-[10px] font-black uppercase tracking-wider border transition-none',
-                          mlModel === m
-                            ? 'bg-[#ff8c00] text-[#131313] border-[#ff8c00]'
-                            : 'bg-transparent text-[#a48c7a] border-[#a48c7a]/30 hover:border-[#ff8c00] hover:text-[#ff8c00]'
-                        )}
-                      >
-                        {m === 'ensemble' ? 'ENSEMBLE' : 'LORA_CODEBERT'}
-                      </button>
-                    ))}
+                {/* Options row */}
+                <div className="flex flex-wrap gap-4 items-end">
+                  <div>
+                    <label className="block text-xs font-600 text-[var(--ink-mid)] uppercase tracking-wide mb-1.5">
+                      Max Files
+                    </label>
+                    <input
+                      type="number"
+                      min="10"
+                      max="1000"
+                      value={maxFiles}
+                      onChange={e => setMaxFiles(parseInt(e.target.value))}
+                      className="h-10 w-24 px-3 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] text-sm text-[var(--ink)] text-center focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-shadow font-['DM_Mono',monospace]"
+                      disabled={isAnalyzing}
+                    />
                   </div>
-                  <span className="text-[#a48c7a]/40">
-                    {mlModel === 'ensemble' ? '// run12 xgb·lgbm·catboost' : '// qlora codebert adapter'}
-                  </span>
-                </div>
 
-                {repoUrl && (
-                  <div className="text-[10px] text-[#a48c7a]/50 pl-45 pt-1 font-mono">
-                    $ {cliCmd}
+                  <div>
+                    <label className="block text-xs font-600 text-[var(--ink-mid)] uppercase tracking-wide mb-1.5">
+                      ML Model
+                    </label>
+                    <div className="flex gap-1 h-10 items-center bg-[var(--bg-subtle)] border border-[var(--border)] rounded-[var(--radius)] p-1">
+                      {(['ensemble', 'lora'] as const).map(m => (
+                        <button
+                          key={m}
+                          type="button"
+                          disabled={isAnalyzing}
+                          onClick={() => setMlModel(m)}
+                          className={cn(
+                            'px-3 h-full rounded-[5px] text-xs font-600 transition-all',
+                            mlModel === m
+                              ? 'bg-white text-[var(--ink)] shadow-sm'
+                              : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
+                          )}
+                        >
+                          {m === 'ensemble' ? 'Ensemble' : 'LoRA CodeBERT'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                )}
+
+                  <div className="ml-auto">
+                    <button
+                      type="submit"
+                      disabled={isAnalyzing || !repoUrl}
+                      className="h-10 px-6 bg-[var(--accent)] text-white font-600 text-sm rounded-[var(--radius)] hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                    >
+                      {isAnalyzing ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                          Scanning…
+                        </span>
+                      ) : 'Run Scan'}
+                    </button>
+                  </div>
+                </div>
               </form>
 
               {/* Progress */}
               {statusData && !isCompleted && statusData.status !== 'failed' && (
-                <div className="mt-4 pt-4 border-t border-[#a48c7a]/20 space-y-1 font-mono text-xs">
-                  <div className="text-[#a48c7a]">
-                    <span className="text-[#ff8c00]">[INIT]</span> Connecting to repository...
+                <div className="mt-5 pt-5 border-t border-[var(--border)] space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-[var(--ink-mid)] font-500">
+                      {statusData.status === 'pending' ? 'Connecting to repository…' : statusData.message}
+                    </span>
+                    <span className="text-[var(--ink)] font-600 font-['DM_Mono',monospace]">{Math.round(progress)}%</span>
                   </div>
-                  {statusData.status === 'processing' && (
-                    <div className="text-[#a48c7a]">
-                      <span className="text-[#ff8c00]">[PROC]</span> {statusData.message}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="text-[#a48c7a] text-[10px] shrink-0 w-8">{Math.round(statusData.progress)}%</span>
-                    <div className="flex-1 h-px bg-[#2a2a2a] relative overflow-hidden">
-                      <div
-                        className={`h-full bg-[#ff8c00] transition-all duration-500 w-[${Math.round(statusData.progress)}%]`}
-                      />
-                    </div>
-                    <span className="term-cursor text-transparent select-none"> </span>
+                  <div className="h-1.5 bg-[var(--bg-subtle)] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[var(--accent)] rounded-full transition-all duration-500"
+                      style={{ width: `${Math.round(progress)}%` }}
+                    />
                   </div>
                 </div>
               )}
 
               {statusData?.status === 'failed' && (
-                <div className="mt-4 pt-4 border-t border-red-500/30 text-xs font-mono text-red-400">
-                  <span className="text-red-500">[ERR]</span> {statusData.error || statusData.message}
+                <div className="mt-5 pt-5 border-t border-[var(--border)] flex items-start gap-2.5 bg-[var(--danger-light)] rounded-[var(--radius)] p-3">
+                  <svg className="w-4 h-4 text-[var(--danger)] shrink-0 mt-px" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <p className="text-sm text-[var(--danger)] font-500">{statusData.error || statusData.message}</p>
                 </div>
               )}
             </section>
 
             {/* Results */}
             {isCompleted && resultsData && (
-              <section className="space-y-6">
+              <section className="space-y-5 fade-up fade-up-2">
+                {/* Stat cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <StatCard label="TOTAL_FUNCS"  value={summary.total_functions} />
-                  <StatCard label="VULNERABLE"   value={summary.vulnerable}      accent="text-red-400"
-                    sub={`${summary.total_functions > 0 ? Math.round(summary.vulnerable / summary.total_functions * 100) : 0}% OF TOTAL`} />
-                  <StatCard label="SAFE"         value={summary.safe}            accent="text-[#39ff14]" />
-                  <StatCard label="AVG_CONFIDENCE" value={`${(summary.avg_conf * 100).toFixed(1)}%`} accent="text-[#ffb77d]" sub={mlModelUsed === 'lora' ? 'LORA · VULN ONLY' : 'ENSEMBLE · VULN ONLY'} />
+                  <StatCard label="Functions"   value={summary.total_functions} variant="default" />
+                  <StatCard label="Vulnerable"  value={summary.vulnerable}      variant="danger"
+                    sub={`${summary.total_functions > 0 ? Math.round(summary.vulnerable / summary.total_functions * 100) : 0}% of total`} />
+                  <StatCard label="Safe"        value={summary.safe}            variant="success" />
+                  <StatCard label="Avg Confidence" value={`${(summary.avg_conf * 100).toFixed(1)}%`} variant="accent"
+                    sub={mlModelUsed === 'lora' ? 'LoRA · vuln only' : 'Ensemble · vuln only'} />
                 </div>
 
-                <div className="border border-[#a48c7a]/25 bg-[#1c1b1b]">
-                  <div className="flex border-b border-[#a48c7a]/25">
+                {/* Results tabs */}
+                <div className="bg-white border border-[var(--border)] rounded-[var(--radius-lg)] overflow-hidden shadow-sm">
+                  <div className="flex border-b border-[var(--border)] bg-[var(--bg-subtle)] px-1 pt-1 gap-1">
                     {resultTabs.map(tab => (
                       <button
                         key={tab.id}
                         type="button"
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                          'px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-none border-r border-[#a48c7a]/20 last:border-r-0',
+                          'px-4 py-2 text-sm font-500 rounded-t-[var(--radius)] transition-colors relative -mb-px border border-transparent',
                           activeTab === tab.id
-                            ? 'bg-[#ff8c00] text-[#131313]'
-                            : 'text-[#a48c7a] hover:text-[#ff8c00] hover:bg-[#2a2a2a]'
+                            ? 'bg-white text-[var(--ink)] font-600 border-[var(--border)] border-b-white'
+                            : 'text-[var(--ink-mid)] hover:text-[var(--ink)] hover:bg-white/60'
                         )}
                       >
                         {tab.label}
-                        <span className={cn('ml-2 text-[10px]', activeTab === tab.id ? 'text-[#131313]' : 'text-[#a48c7a]/60')}>
-                          [{tab.count}]
+                        <span className={cn(
+                          'ml-2 text-[10px] font-600 px-1.5 py-0.5 rounded-full',
+                          activeTab === tab.id
+                            ? 'bg-[var(--accent-light)] text-[var(--accent)]'
+                            : 'bg-[var(--bg-subtle)] text-[var(--ink-muted)]'
+                        )}>
+                          {tab.count}
                         </span>
                       </button>
                     ))}
@@ -490,19 +522,16 @@ export function Dashboard() {
                   <div className="p-5">
                     {activeTab === 'static' && (
                       <>
-                        <div className="text-[10px] text-[#a48c7a] uppercase tracking-widest mb-4 flex justify-between">
-                          <span>// CPPCHECK · FLAWFINDER · SEMGREP — VULNERABLE ONLY</span>
-                          <span className="text-[#ff8c00]">[{staticFiltered.length}]</span>
-                        </div>
+                        <p className="text-xs text-[var(--ink-muted)] mb-4 font-500">
+                          CppCheck · Flawfinder · Semgrep — Vulnerable functions only
+                        </p>
                         <VirtualizedResultList results={staticFiltered} mode="static" />
                       </>
                     )}
 
                     {activeTab === 'ml' && (
                       <>
-                        <div className="text-[10px] text-[#a48c7a] uppercase tracking-widest mb-4">
-                          {mlTabHeader}
-                        </div>
+                        <p className="text-xs text-[var(--ink-muted)] mb-4 font-500">{mlTabHeader}</p>
                         <FilterBar
                           statusFilter={mlFilters.status}
                           severityFilter={mlFilters.severity}
@@ -524,18 +553,19 @@ export function Dashboard() {
 
         {/* ── LOGS tab ───────────────────────────────────────────── */}
         {navTab === 'logs' && (
-          <section className="space-y-4">
+          <section className="space-y-4 fade-up">
             <div className="flex items-center justify-between">
-              <div className="text-[10px] text-[#a48c7a] uppercase tracking-widest">
-                // PIPELINE_LOGS — <span className="text-[#ff8c00]">{logs.length} ENTRIES</span>
+              <div>
+                <h2 className="text-sm font-700 text-[var(--ink)]">Pipeline Logs</h2>
+                <p className="text-xs text-[var(--ink-muted)] mt-0.5">{logs.length} entries</p>
               </div>
               {logs.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setLogs([])}
-                  className="text-[9px] text-[#a48c7a] border border-[#a48c7a]/30 px-3 py-1 uppercase tracking-widest hover:border-red-500 hover:text-red-400 transition-none"
+                  className="text-xs text-[var(--ink-muted)] border border-[var(--border)] px-3 py-1.5 rounded-[var(--radius)] hover:border-[var(--danger-dim)] hover:text-[var(--danger)] transition-colors font-500"
                 >
-                  CLEAR_LOG
+                  Clear logs
                 </button>
               )}
             </div>
